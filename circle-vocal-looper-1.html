@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Circle Vocal Looper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Major+Mono+Display&family=VT323&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #f4ede0;
+    --cream-deep: #ebe2d1;
+    --teal: #1fb6a8;
+    --teal-deep: #0e8b85;
+    --teal-glow: #4ee3d2;
+    --ink: #0a2826;
+    --metal-1: #d8d8da;
+    --metal-2: #8a8a8e;
+    --metal-3: #4a4a4d;
+    --led-on: #65f06a;
+    --led-off: #2a3a30;
+    --led-rec: #ff3b3b;
+    --screen-bg: #0d2820;
+    --screen-fg: #7cf0a5;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0;
+    min-height: 100vh;
+    font-family: 'Space Mono', monospace;
+    background:
+      radial-gradient(ellipse at top, #2a2825 0%, #14110e 60%, #0a0807 100%);
+    color: var(--cream);
+    overflow-x: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* Wood-grain stage */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      repeating-linear-gradient(90deg, rgba(255,255,255,0.015) 0 2px, transparent 2px 7px),
+      repeating-linear-gradient(0deg, rgba(0,0,0,0.06) 0 1px, transparent 1px 4px);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .stage {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px 40px;
+  }
+
+  .brand {
+    font-family: 'Major Mono Display', monospace;
+    font-size: 13px;
+    letter-spacing: 0.4em;
+    color: var(--cream);
+    opacity: 0.6;
+    margin-bottom: 14px;
+    text-align: center;
+  }
+  .brand b { color: var(--teal-glow); font-weight: normal; }
+
+  /* ====== PEDAL CHASSIS ====== */
+  .pedal {
+    width: 100%;
+    max-width: 380px;
+    aspect-ratio: 380 / 540;
+    background:
+      linear-gradient(180deg, #f7f0e3 0%, #ede4d2 100%);
+    border-radius: 18px;
+    position: relative;
+    box-shadow:
+      inset 0 0 0 2px rgba(0,0,0,0.06),
+      inset 0 2px 0 rgba(255,255,255,0.7),
+      inset 0 -3px 8px rgba(0,0,0,0.08),
+      0 18px 40px rgba(0,0,0,0.55),
+      0 4px 8px rgba(0,0,0,0.4);
+    padding: 22px 20px 18px;
+    overflow: hidden;
+  }
+
+  /* Subtle paint texture */
+  .pedal::after {
+    content: '';
+    position: absolute; inset: 0;
+    background-image: radial-gradient(circle at 20% 10%, rgba(255,255,255,0.4), transparent 40%);
+    pointer-events: none;
+    border-radius: inherit;
+  }
+
+  /* Top circuit deco */
+  .circuit-top {
+    position: absolute;
+    top: 14px; left: 14px; right: 14px;
+    height: 36px;
+    pointer-events: none;
+  }
+  .circuit-top svg { width: 100%; height: 100%; display: block; }
+
+  /* Mounting screws in 4 corners */
+  .screw {
+    position: absolute;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 35% 30%, #f0f0f2, #9a9a9d 55%, #4a4a4d 100%);
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.4);
+    z-index: 5;
+  }
+  .screw::before {
+    content: '';
+    position: absolute; inset: 3px;
+    background: linear-gradient(45deg, transparent 45%, #2a2a2d 45% 55%, transparent 55%);
+    border-radius: 50%;
+  }
+  .screw.tl { top: 8px; left: 8px; }
+  .screw.tr { top: 8px; right: 8px; }
+  .screw.bl { bottom: 8px; left: 8px; }
+  .screw.br { bottom: 8px; right: 8px; }
+
+  /* Wordmark CIRCLE LOOPER */
+  .wordmark {
+    text-align: center;
+    margin-top: 28px;
+    line-height: 1;
+    color: var(--teal);
+  }
+  .wordmark .big {
+    font-family: 'Major Mono Display', monospace;
+    font-size: 32px;
+    letter-spacing: 0.18em;
+    display: block;
+  }
+  .wordmark .sub {
+    font-family: 'Major Mono Display', monospace;
+    font-size: 11px;
+    letter-spacing: 0.55em;
+    display: block;
+    margin-top: 4px;
+    opacity: 0.85;
+  }
+
+  /* LED indicator rows */
+  .led-rows {
+    position: absolute;
+    top: 70px;
+    left: 22px; right: 22px;
+    display: flex;
+    justify-content: space-between;
+    font-family: 'Major Mono Display', monospace;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    color: var(--teal-deep);
+  }
+  .led-col { display: flex; flex-direction: column; gap: 6px; }
+  .led-col.right { align-items: flex-end; }
+  .led-row { display: flex; align-items: center; gap: 7px; }
+  .led-col.right .led-row { flex-direction: row-reverse; }
+  .led {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--led-off);
+    box-shadow: inset 0 0 2px rgba(0,0,0,0.6);
+    transition: background 0.15s, box-shadow 0.15s;
+  }
+  .led.on {
+    background: var(--led-on);
+    box-shadow: 0 0 6px var(--led-on), 0 0 2px #fff inset;
+  }
+  .led.rec {
+    background: var(--led-rec);
+    box-shadow: 0 0 8px var(--led-rec), 0 0 2px #fff inset;
+    animation: pulse 1s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.55; }
+  }
+
+  /* Knobs */
+  .knobs {
+    position: absolute;
+    top: 150px;
+    left: 28px; right: 28px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .knob-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .knob {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 30% 25%, #fafafa 0%, #c8c8cc 35%, #6e6e72 75%, #2a2a2d 100%);
+    position: relative;
+    box-shadow:
+      0 4px 8px rgba(0,0,0,0.45),
+      inset 0 -2px 4px rgba(0,0,0,0.4),
+      inset 0 1px 1px rgba(255,255,255,0.5);
+    cursor: grab;
+    touch-action: none;
+  }
+  .knob:active { cursor: grabbing; }
+  .knob::before {
+    content: '';
+    position: absolute; inset: 8px;
+    border-radius: 50%;
+    background:
+      conic-gradient(from 0deg, #d0d0d4, #8a8a8e, #d0d0d4, #8a8a8e, #d0d0d4);
+    opacity: 0.4;
+  }
+  .knob::after {
+    content: '';
+    position: absolute;
+    top: 5px; left: 50%;
+    transform: translateX(-50%);
+    width: 3px; height: 14px;
+    background: linear-gradient(180deg, var(--ink), var(--teal-deep));
+    border-radius: 2px;
+    box-shadow: 0 0 3px rgba(0,0,0,0.5);
+  }
+  .knob-inner { position: absolute; inset: 0; transition: transform 0.05s linear; }
+  .knob-label {
+    font-family: 'Major Mono Display', monospace;
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    color: var(--teal-deep);
+  }
+
+  /* Center display panel */
+  .display-panel {
+    position: absolute;
+    top: 232px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 220px;
+    height: 140px;
+    background:
+      linear-gradient(180deg, #1a4540 0%, #0e2e2a 100%);
+    border: 2px solid #134741;
+    border-radius: 14px;
+    padding: 10px 12px;
+    box-shadow:
+      inset 0 0 12px rgba(0,0,0,0.6),
+      inset 0 2px 4px rgba(0,0,0,0.4),
+      0 2px 0 rgba(255,255,255,0.3);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .screen {
+    flex: 1;
+    background:
+      radial-gradient(ellipse at center, #102e26 0%, #061812 100%);
+    border-radius: 6px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: inset 0 0 8px rgba(0,0,0,0.8);
+  }
+  /* Scanlines */
+  .screen::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(0deg, rgba(124,240,165,0.04) 0 1px, transparent 1px 3px);
+    pointer-events: none;
+  }
+
+  .screen-content {
+    position: absolute; inset: 0;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    color: var(--screen-fg);
+    font-family: 'VT323', monospace;
+    text-shadow: 0 0 4px rgba(124,240,165,0.6);
+  }
+  .screen-row { display: flex; justify-content: space-between; align-items: center; }
+  .screen-mode {
+    font-size: 18px;
+    letter-spacing: 0.08em;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .screen-mode .glyph {
+    display: inline-block;
+    width: 12px; height: 12px;
+    background: var(--screen-fg);
+    box-shadow: 0 0 4px var(--screen-fg);
+  }
+  .screen-mode.recording .glyph { background: #ff6b6b; box-shadow: 0 0 6px #ff6b6b; border-radius: 50%; }
+  .screen-mode.playing .glyph { clip-path: polygon(0 0, 100% 50%, 0 100%); background: var(--screen-fg); }
+  .screen-mode.dub .glyph { background: #ffe066; box-shadow: 0 0 6px #ffe066; }
+  .screen-mode.idle .glyph { background: #5a8a72; box-shadow: none; }
+
+  .screen-time {
+    font-size: 32px;
+    line-height: 0.9;
+    letter-spacing: 0.05em;
+    font-weight: bold;
+    text-align: center;
+    margin: 2px 0;
+  }
+  .screen-info {
+    font-size: 13px;
+    display: flex;
+    justify-content: space-between;
+    opacity: 0.85;
+  }
+
+  /* Waveform visualizer strip */
+  .wave-strip {
+    height: 22px;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 1.5px;
+    justify-content: center;
+  }
+  .wave-bar {
+    width: 2px;
+    background: var(--screen-fg);
+    border-radius: 1px;
+    box-shadow: 0 0 3px rgba(124,240,165,0.7);
+    transition: height 0.08s ease;
+  }
+
+  /* Center small button (merger / clear) */
+  .merger-btn {
+    position: absolute;
+    top: 388px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 30% 25%, #f0f0f2, #aaaaad 50%, #4a4a4d 100%);
+    border: none;
+    box-shadow:
+      0 3px 5px rgba(0,0,0,0.5),
+      inset 0 -2px 3px rgba(0,0,0,0.4),
+      inset 0 1px 1px rgba(255,255,255,0.5);
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .merger-btn:active {
+    box-shadow:
+      0 1px 2px rgba(0,0,0,0.5),
+      inset 0 -1px 2px rgba(0,0,0,0.4);
+    transform: translateX(-50%) translateY(1px);
+  }
+  .merger-label {
+    position: absolute;
+    top: 426px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Major Mono Display', monospace;
+    font-size: 7px;
+    letter-spacing: 0.2em;
+    color: var(--teal-deep);
+    text-align: center;
+    line-height: 1.5;
+    white-space: nowrap;
+  }
+
+  /* Footswitches */
+  .switches {
+    position: absolute;
+    bottom: 38px;
+    left: 28px; right: 28px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .switch-wrap { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .switch {
+    width: 70px; height: 70px;
+    border-radius: 50%;
+    border: none;
+    background:
+      radial-gradient(circle at 35% 30%, #fafafa 0%, #c4c4c8 35%, #6e6e72 70%, #2a2a2d 100%);
+    box-shadow:
+      0 6px 0 #1a1a1d,
+      0 8px 14px rgba(0,0,0,0.55),
+      inset 0 -3px 5px rgba(0,0,0,0.4),
+      inset 0 2px 2px rgba(255,255,255,0.6);
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.08s, box-shadow 0.08s;
+    touch-action: manipulation;
+  }
+  .switch::after {
+    content: '';
+    position: absolute;
+    inset: 14px;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 30% 25%, rgba(255,255,255,0.4), transparent 60%),
+      radial-gradient(circle at center, #d8d8da 0%, #8a8a8e 100%);
+    box-shadow: inset 0 -2px 4px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.5);
+  }
+  .switch:active, .switch.pressed {
+    transform: translateY(4px);
+    box-shadow:
+      0 2px 0 #1a1a1d,
+      0 3px 6px rgba(0,0,0,0.5),
+      inset 0 -2px 4px rgba(0,0,0,0.4);
+  }
+  .switch-label {
+    font-family: 'Major Mono Display', monospace;
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    color: var(--teal-deep);
+    text-align: center;
+    line-height: 1.5;
+  }
+
+  /* Side jacks */
+  .jacks {
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 26px;
+    pointer-events: none;
+  }
+  .jacks.left { left: 0; }
+  .jacks.right { right: 0; }
+  .jack {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at center, #1a1a1d 0%, #1a1a1d 35%, #4a4a4d 36%, #8a8a8e 70%, #4a4a4d 100%);
+    box-shadow: inset 0 0 2px rgba(0,0,0,0.8);
+  }
+  .jack-side-label {
+    position: absolute;
+    font-family: 'Major Mono Display', monospace;
+    font-size: 7px;
+    letter-spacing: 0.2em;
+    color: var(--teal-deep);
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+  }
+
+  /* MODE SWITCH text */
+  .mode-switch-label {
+    position: absolute;
+    bottom: 130px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Major Mono Display', monospace;
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    color: var(--teal-deep);
+  }
+
+  /* Donner-style brand on pedal */
+  .pedal-brand {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Major Mono Display', monospace;
+    font-size: 13px;
+    letter-spacing: 0.35em;
+    color: var(--teal);
+    opacity: 0.9;
+  }
+
+  /* Help / status bar below */
+  .help {
+    margin-top: 22px;
+    max-width: 380px;
+    width: 100%;
+    text-align: center;
+  }
+  .hint {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: rgba(244,237,224,0.65);
+    line-height: 1.7;
+    letter-spacing: 0.02em;
+    padding: 0 8px;
+  }
+  .hint b { color: var(--teal-glow); font-weight: 700; }
+  .hint .kbd {
+    display: inline-block;
+    padding: 1px 6px;
+    border: 1px solid rgba(244,237,224,0.25);
+    border-radius: 4px;
+    background: rgba(0,0,0,0.3);
+    color: var(--cream);
+    font-size: 11px;
+    margin: 0 2px;
+  }
+
+  .status-line {
+    margin-top: 14px;
+    font-family: 'Major Mono Display', monospace;
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    color: var(--teal-glow);
+    min-height: 14px;
+    text-align: center;
+    text-transform: uppercase;
+    text-shadow: 0 0 8px rgba(78,227,210,0.4);
+  }
+
+  /* Mic permission overlay */
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(8,6,4,0.92);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 24px;
+  }
+  .overlay.hidden { display: none; }
+  .overlay-card {
+    max-width: 340px;
+    width: 100%;
+    background: linear-gradient(180deg, #1a1815 0%, #0e0c0a 100%);
+    border: 1px solid rgba(31,182,168,0.3);
+    border-radius: 16px;
+    padding: 28px 22px;
+    text-align: center;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.7), 0 0 30px rgba(31,182,168,0.1);
+  }
+  .overlay h2 {
+    font-family: 'Major Mono Display', monospace;
+    font-size: 18px;
+    letter-spacing: 0.25em;
+    color: var(--teal-glow);
+    margin: 0 0 10px;
+  }
+  .overlay p {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    color: rgba(244,237,224,0.75);
+    margin: 0 0 20px;
+  }
+  .start-btn {
+    background: linear-gradient(180deg, var(--teal-glow), var(--teal));
+    color: var(--ink);
+    border: none;
+    padding: 14px 30px;
+    font-family: 'Major Mono Display', monospace;
+    font-size: 13px;
+    letter-spacing: 0.3em;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 var(--teal-deep), 0 8px 16px rgba(31,182,168,0.3);
+    transition: transform 0.1s, box-shadow 0.1s;
+  }
+  .start-btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 var(--teal-deep), 0 4px 8px rgba(31,182,168,0.3);
+  }
+
+  .err {
+    color: #ff8b8b;
+    font-size: 12px;
+    margin-top: 10px;
+    min-height: 16px;
+  }
+
+  /* Track list */
+  .tracks {
+    margin-top: 18px;
+    width: 100%;
+    max-width: 380px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .track {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: rgba(31,182,168,0.06);
+    border: 1px solid rgba(31,182,168,0.18);
+    border-radius: 8px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--cream);
+  }
+  .track-num {
+    color: var(--teal-glow);
+    font-weight: 700;
+    min-width: 24px;
+  }
+  .track-mini-wave {
+    flex: 1;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    gap: 1px;
+  }
+  .track-mini-wave span {
+    width: 2px;
+    background: var(--teal);
+    border-radius: 1px;
+    opacity: 0.7;
+  }
+  .track-time {
+    color: rgba(244,237,224,0.6);
+    font-size: 10px;
+  }
+
+  /* Footer credit */
+  footer {
+    margin-top: 22px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: rgba(244,237,224,0.3);
+    text-align: center;
+  }
+
+  @media (max-width: 380px) {
+    .pedal { max-width: 340px; }
+    .knobs { left: 22px; right: 22px; }
+    .knob { width: 56px; height: 56px; }
+    .display-panel { width: 200px; height: 130px; top: 220px; }
+    .merger-btn { top: 372px; }
+    .merger-label { top: 410px; }
+    .switches { left: 22px; right: 22px; bottom: 32px; }
+    .switch { width: 62px; height: 62px; }
+    .wordmark .big { font-size: 28px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="brand">CIRCLE <b>VOCAL</b> LOOPER</div>
+
+  <!-- ========== PEDAL ========== -->
+  <div class="pedal" id="pedal">
+    <span class="screw tl"></span>
+    <span class="screw tr"></span>
+    <span class="screw bl"></span>
+    <span class="screw br"></span>
+
+    <!-- Top circuit lines -->
+    <div class="circuit-top">
+      <svg viewBox="0 0 340 36" preserveAspectRatio="none">
+        <g fill="none" stroke="#1fb6a8" stroke-width="1.5" opacity="0.65">
+          <path d="M5,18 L40,18 L50,8 L120,8 L130,18 L210,18 L220,8 L290,8 L300,18 L335,18"/>
+          <circle cx="5" cy="18" r="3" fill="#1fb6a8"/>
+          <circle cx="335" cy="18" r="3" fill="#1fb6a8"/>
+          <circle cx="170" cy="18" r="2"/>
+          <path d="M60,8 L60,2 M100,8 L100,2 M240,8 L240,2 M280,8 L280,2" stroke-width="1"/>
+        </g>
+        <text x="170" y="32" text-anchor="middle" font-family="Major Mono Display, monospace" font-size="7" letter-spacing="0.2em" fill="#0e8b85" opacity="0.7">DC IN</text>
+      </svg>
+    </div>
+
+    <!-- LED indicator rows -->
+    <div class="led-rows">
+      <div class="led-col">
+        <div class="led-row"><span class="led" id="led-memory"></span><span>MEMORY</span></div>
+        <div class="led-row"><span class="led" id="led-level"></span><span>LEVEL</span></div>
+        <div class="led-row"><span class="led" id="led-fade"></span><span>FADE OUT</span></div>
+      </div>
+      <div class="led-col right">
+        <div class="led-row"><span class="led on" id="led-select"></span><span>SELECT</span></div>
+        <div class="led-row"><span class="led on" id="led-volume"></span><span>VOLUME</span></div>
+        <div class="led-row"><span class="led" id="led-bpm"></span><span>BPM</span></div>
+      </div>
+    </div>
+
+    <!-- Wordmark -->
+    <div class="wordmark">
+      <span class="big">CIRCLE</span>
+      <span class="sub">VOCAL LOOPER</span>
+    </div>
+
+    <!-- Knobs -->
+    <div class="knobs">
+      <div class="knob-wrap">
+        <div class="knob" id="knob-loop" data-value="75"><div class="knob-inner"></div></div>
+        <div class="knob-label">LOOPER</div>
+      </div>
+      <div class="knob-wrap">
+        <div class="knob" id="knob-mic" data-value="80"><div class="knob-inner"></div></div>
+        <div class="knob-label">MIC IN</div>
+      </div>
+    </div>
+
+    <!-- Display panel -->
+    <div class="display-panel">
+      <div class="screen">
+        <div class="screen-content">
+          <div class="screen-row">
+            <div class="screen-mode idle" id="mode-display">
+              <span class="glyph"></span>
+              <span id="mode-text">IDLE</span>
+            </div>
+            <div id="layer-count" style="font-size:14px;">0 LAYERS</div>
+          </div>
+          <div class="screen-time" id="time-display">0.0S</div>
+          <div class="wave-strip" id="wave-strip"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Center merger/clear button -->
+    <button class="merger-btn" id="merger-btn" aria-label="Merger Control / Hold to delete"></button>
+    <div class="merger-label">MERGER CTRL<br>HOLD FOR DELETE</div>
+
+    <!-- Mode switch label -->
+    <div class="mode-switch-label">MODE SWITCH</div>
+
+    <!-- Footswitches -->
+    <div class="switches">
+      <div class="switch-wrap">
+        <button class="switch" id="sw-rec" aria-label="Record / Dub"></button>
+        <div class="switch-label">REC / DUB</div>
+      </div>
+      <div class="switch-wrap">
+        <button class="switch" id="sw-stop" aria-label="Stop / Play / Clear"></button>
+        <div class="switch-label">STOP/PLAY<br>CLEAR</div>
+      </div>
+    </div>
+
+    <!-- Brand -->
+    <div class="pedal-brand">CIRCLE</div>
+  </div>
+
+  <!-- Status line -->
+  <div class="status-line" id="status">READY · TAP REC TO START</div>
+
+  <!-- Help -->
+  <div class="help">
+    <div class="hint">
+      <b>REC/DUB</b> tap to record · tap again to loop · tap to overdub<br>
+      <b>STOP/PLAY</b> tap to stop & play · double-tap to clear<br>
+      <span style="opacity:0.7">keyboard: <span class="kbd">SPACE</span> rec/dub · <span class="kbd">S</span> stop/play · <span class="kbd">C</span> clear</span>
+    </div>
+  </div>
+
+  <!-- Track list -->
+  <div class="tracks" id="tracks"></div>
+
+  <footer>VOCAL LOOPER · BUILT FOR THE VOICE</footer>
+</div>
+
+<!-- Mic permission overlay -->
+<div class="overlay" id="overlay">
+  <div class="overlay-card">
+    <h2>WAKE THE PEDAL</h2>
+    <p>This vocal looper needs microphone access to record your voice. Audio stays on your device — nothing is uploaded.</p>
+    <button class="start-btn" id="start-btn">POWER ON</button>
+    <div class="err" id="err"></div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   CIRCLE VOCAL LOOPER
+   - Tap REC: arm & record first loop. Tap again: lock loop length & start playback.
+   - Tap REC again while playing: overdub a new layer onto the loop.
+   - Tap STOP/PLAY: pause / resume playback.
+   - Double-tap STOP/PLAY (or hold MERGER): clear everything.
+   ========================================================= */
+
+const $ = (id) => document.getElementById(id);
+
+// ----- Audio state -----
+let audioCtx = null;
+let micStream = null;
+let micSource = null;
+let masterGain = null;
+let micMonitorGain = null; // not routed to output (avoid feedback)
+let analyserNode = null;
+
+// Loop state
+let state = 'idle'; // idle | recording | playing | overdubbing
+let loopBuffer = null;       // AudioBuffer holding the mixed-down loop
+let loopDurationSec = 0;
+let layers = [];             // [{buffer, startedAt}]
+let activeSources = [];      // currently scheduled BufferSourceNodes
+let recordStartTime = 0;
+let recordChunks = [];       // Float32Array chunks
+let recordProcessor = null;  // ScriptProcessor for capturing
+let playLoopStartCtxTime = 0;
+
+let loopVolume = 0.75;
+let micGainValue = 0.8;
+
+// UI refs
+const modeDisplay = $('mode-display');
+const modeText = $('mode-text');
+const timeDisplay = $('time-display');
+const waveStrip = $('wave-strip');
+const layerCount = $('layer-count');
+const statusEl = $('status');
+const tracksEl = $('tracks');
+
+// Build waveform bars
+const NUM_BARS = 32;
+const waveBars = [];
+for (let i = 0; i < NUM_BARS; i++) {
+  const b = document.createElement('div');
+  b.className = 'wave-bar';
+  b.style.height = '2px';
+  waveStrip.appendChild(b);
+  waveBars.push(b);
+}
+
+// ===== Init audio =====
+async function initAudio() {
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  try {
+    micStream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: false,
+      }
+    });
+  } catch (e) {
+    throw new Error('Microphone access denied');
+  }
+  micSource = audioCtx.createMediaStreamSource(micStream);
+
+  // Master output gain (loop playback only — never route mic to output)
+  masterGain = audioCtx.createGain();
+  masterGain.gain.value = loopVolume;
+  masterGain.connect(audioCtx.destination);
+
+  // Analyser on mic for visualization while recording
+  analyserNode = audioCtx.createAnalyser();
+  analyserNode.fftSize = 256;
+  micSource.connect(analyserNode);
+
+  // Mic gain (for capture)
+  micMonitorGain = audioCtx.createGain();
+  micMonitorGain.gain.value = micGainValue;
+  micSource.connect(micMonitorGain);
+
+  // Visualization loop
+  requestAnimationFrame(visualize);
+}
+
+// ===== Recording via ScriptProcessor (well-supported & simple) =====
+function startRecording() {
+  recordChunks = [];
+  recordStartTime = audioCtx.currentTime;
+
+  // Use ScriptProcessor (deprecated but universally supported on iOS Safari)
+  const bufferSize = 4096;
+  recordProcessor = audioCtx.createScriptProcessor(bufferSize, 1, 1);
+  recordProcessor.onaudioprocess = (e) => {
+    const input = e.inputBuffer.getChannelData(0);
+    const chunk = new Float32Array(input.length);
+    chunk.set(input);
+    recordChunks.push(chunk);
+  };
+  micMonitorGain.connect(recordProcessor);
+  // Must connect to destination for ScriptProcessor to fire, but route through silent gain
+  const silent = audioCtx.createGain();
+  silent.gain.value = 0;
+  recordProcessor.connect(silent);
+  silent.connect(audioCtx.destination);
+  recordProcessor._silent = silent;
+}
+
+function stopRecordingToBuffer() {
+  if (!recordProcessor) return null;
+  micMonitorGain.disconnect(recordProcessor);
+  recordProcessor.disconnect();
+  recordProcessor._silent.disconnect();
+  recordProcessor = null;
+
+  // Concatenate chunks
+  const totalLen = recordChunks.reduce((a, c) => a + c.length, 0);
+  if (totalLen === 0) return null;
+  const merged = new Float32Array(totalLen);
+  let offset = 0;
+  for (const c of recordChunks) {
+    merged.set(c, offset);
+    offset += c.length;
+  }
+  recordChunks = [];
+
+  const buf = audioCtx.createBuffer(1, merged.length, audioCtx.sampleRate);
+  buf.copyToChannel(merged, 0);
+  return buf;
+}
+
+// ===== Loop playback =====
+function startLoopPlayback() {
+  stopAllSources();
+  if (layers.length === 0) return;
+
+  playLoopStartCtxTime = audioCtx.currentTime + 0.02;
+  for (const layer of layers) {
+    scheduleLayer(layer, playLoopStartCtxTime);
+  }
+}
+
+function scheduleLayer(layer, startTime) {
+  const src = audioCtx.createBufferSource();
+  src.buffer = layer.buffer;
+  src.loop = true;
+  src.loopEnd = loopDurationSec;
+  src.connect(masterGain);
+  src.start(startTime);
+  activeSources.push(src);
+  layer.source = src;
+}
+
+function stopAllSources() {
+  for (const s of activeSources) {
+    try { s.stop(); } catch (e) {}
+    try { s.disconnect(); } catch (e) {}
+  }
+  activeSources = [];
+}
+
+// ===== State machine =====
+function setMode(mode) {
+  state = mode;
+  modeDisplay.classList.remove('idle','recording','playing','dub');
+  modeDisplay.classList.add(mode === 'idle' ? 'idle' :
+                            mode === 'recording' ? 'recording' :
+                            mode === 'overdubbing' ? 'dub' : 'playing');
+  modeText.textContent =
+    mode === 'idle' ? 'IDLE' :
+    mode === 'recording' ? 'REC' :
+    mode === 'overdubbing' ? 'DUB' :
+    'PLAY';
+
+  // LEDs
+  $('led-memory').classList.toggle('on', layers.length > 0 && mode !== 'recording');
+  $('led-memory').classList.toggle('rec', mode === 'recording' || mode === 'overdubbing');
+  $('led-bpm').classList.toggle('on', mode === 'playing' || mode === 'overdubbing');
+  $('led-fade').classList.toggle('on', mode === 'idle' && layers.length > 0);
+}
+
+function handleRec() {
+  if (!audioCtx) return;
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+
+  if (state === 'idle' && layers.length === 0) {
+    // First record — establish loop length
+    setMode('recording');
+    startRecording();
+    statusEl.textContent = 'RECORDING · TAP REC TO LOCK LOOP';
+  } else if (state === 'recording') {
+    // Stop initial record, lock loop length, start playback
+    const buf = stopRecordingToBuffer();
+    if (!buf) {
+      setMode('idle');
+      statusEl.textContent = 'NO AUDIO · TRY AGAIN';
+      return;
+    }
+    loopDurationSec = buf.duration;
+    layers.push({ buffer: buf });
+    setMode('playing');
+    startLoopPlayback();
+    statusEl.textContent = `LOOP SET · ${loopDurationSec.toFixed(1)}S`;
+    renderTracks();
+  } else if (state === 'playing') {
+    // Begin overdub
+    setMode('overdubbing');
+    startRecording();
+    statusEl.textContent = 'OVERDUBBING · TAP REC TO COMMIT';
+  } else if (state === 'overdubbing') {
+    // Commit overdub layer, trim/pad to loop length
+    const buf = stopRecordingToBuffer();
+    if (buf) {
+      const aligned = alignToLoop(buf);
+      layers.push({ buffer: aligned });
+      // Schedule new layer aligned to loop boundary
+      const elapsed = (audioCtx.currentTime - playLoopStartCtxTime);
+      const cyclesDone = Math.floor(elapsed / loopDurationSec) + 1;
+      const nextBoundary = playLoopStartCtxTime + cyclesDone * loopDurationSec;
+      scheduleLayer(layers[layers.length - 1], nextBoundary);
+      statusEl.textContent = `LAYER ${layers.length} ADDED`;
+      renderTracks();
+    }
+    setMode('playing');
+  }
+}
+
+function alignToLoop(buf) {
+  // Trim or pad incoming buffer to exactly loopDurationSec
+  const targetLen = Math.round(loopDurationSec * audioCtx.sampleRate);
+  const out = audioCtx.createBuffer(1, targetLen, audioCtx.sampleRate);
+  const inData = buf.getChannelData(0);
+  const outData = out.getChannelData(0);
+  const copyLen = Math.min(targetLen, inData.length);
+  for (let i = 0; i < copyLen; i++) outData[i] = inData[i];
+  return out;
+}
+
+let lastStopTap = 0;
+function handleStop() {
+  if (!audioCtx) return;
+  const now = Date.now();
+
+  if (state === 'recording' || state === 'overdubbing') {
+    // Cancel current recording
+    stopRecordingToBuffer();
+    if (layers.length > 0) {
+      setMode('playing');
+      startLoopPlayback();
+    } else {
+      setMode('idle');
+    }
+    statusEl.textContent = 'CANCELLED';
+    lastStopTap = now;
+    return;
+  }
+
+  // Double-tap detection (within 350 ms) to clear
+  if (now - lastStopTap < 350) {
+    clearAll();
+    lastStopTap = 0;
+    return;
+  }
+  lastStopTap = now;
+
+  if (state === 'playing') {
+    stopAllSources();
+    setMode('idle');
+    statusEl.textContent = 'STOPPED · TAP STOP AGAIN TO CLEAR';
+  } else if (state === 'idle' && layers.length > 0) {
+    setMode('playing');
+    startLoopPlayback();
+    statusEl.textContent = 'PLAYING';
+  }
+}
+
+function clearAll() {
+  stopAllSources();
+  layers = [];
+  loopDurationSec = 0;
+  setMode('idle');
+  statusEl.textContent = 'CLEARED · TAP REC TO START';
+  renderTracks();
+  $('led-memory').classList.remove('on','rec');
+  $('led-fade').classList.remove('on');
+  $('led-bpm').classList.remove('on');
+}
+
+// ===== Visualization =====
+function visualize() {
+  requestAnimationFrame(visualize);
+  if (!analyserNode) return;
+
+  // Time display
+  if (state === 'recording') {
+    const t = audioCtx.currentTime - recordStartTime;
+    timeDisplay.textContent = t.toFixed(1) + 'S';
+  } else if (state === 'overdubbing') {
+    const t = audioCtx.currentTime - recordStartTime;
+    timeDisplay.textContent = t.toFixed(1) + 'S';
+  } else if (state === 'playing' && loopDurationSec > 0) {
+    const elapsed = (audioCtx.currentTime - playLoopStartCtxTime) % loopDurationSec;
+    timeDisplay.textContent = elapsed.toFixed(1) + 'S';
+  } else if (loopDurationSec > 0) {
+    timeDisplay.textContent = loopDurationSec.toFixed(1) + 'S';
+  } else {
+    timeDisplay.textContent = '0.0S';
+  }
+
+  layerCount.textContent = layers.length + (layers.length === 1 ? ' LAYER' : ' LAYERS');
+
+  // Waveform
+  const data = new Uint8Array(analyserNode.frequencyBinCount);
+  analyserNode.getByteFrequencyData(data);
+  const step = Math.floor(data.length / NUM_BARS);
+  for (let i = 0; i < NUM_BARS; i++) {
+    let sum = 0;
+    for (let j = 0; j < step; j++) sum += data[i * step + j];
+    const avg = sum / step;
+    const h = Math.max(2, (avg / 255) * 22);
+    waveBars[i].style.height = h + 'px';
+  }
+}
+
+// ===== Track list =====
+function renderTracks() {
+  tracksEl.innerHTML = '';
+  layers.forEach((layer, i) => {
+    const div = document.createElement('div');
+    div.className = 'track';
+
+    const num = document.createElement('span');
+    num.className = 'track-num';
+    num.textContent = (i + 1).toString().padStart(2, '0');
+
+    const wave = document.createElement('div');
+    wave.className = 'track-mini-wave';
+    // Generate static fingerprint from buffer
+    const data = layer.buffer.getChannelData(0);
+    const bins = 40;
+    const blockSize = Math.floor(data.length / bins);
+    for (let b = 0; b < bins; b++) {
+      let max = 0;
+      for (let k = 0; k < blockSize; k++) {
+        const v = Math.abs(data[b * blockSize + k] || 0);
+        if (v > max) max = v;
+      }
+      const span = document.createElement('span');
+      span.style.height = Math.max(2, max * 16) + 'px';
+      wave.appendChild(span);
+    }
+
+    const time = document.createElement('span');
+    time.className = 'track-time';
+    time.textContent = layer.buffer.duration.toFixed(1) + 's';
+
+    div.appendChild(num);
+    div.appendChild(wave);
+    div.appendChild(time);
+    tracksEl.appendChild(div);
+  });
+}
+
+// ===== Knob interaction =====
+function setupKnob(el, onChange) {
+  let dragging = false;
+  let startY = 0;
+  let startVal = parseFloat(el.dataset.value);
+
+  function setVisual(v) {
+    // Map 0–100 → -135deg to 135deg
+    const angle = -135 + (v / 100) * 270;
+    el.style.transform = `rotate(${angle}deg)`;
+    el.dataset.value = v;
+  }
+  setVisual(startVal);
+
+  function onDown(e) {
+    dragging = true;
+    startY = (e.touches ? e.touches[0].clientY : e.clientY);
+    startVal = parseFloat(el.dataset.value);
+    e.preventDefault();
+  }
+  function onMove(e) {
+    if (!dragging) return;
+    const y = (e.touches ? e.touches[0].clientY : e.clientY);
+    const delta = startY - y; // up = increase
+    let v = Math.max(0, Math.min(100, startVal + delta * 0.6));
+    setVisual(v);
+    onChange(v / 100);
+  }
+  function onUp() { dragging = false; }
+
+  el.addEventListener('mousedown', onDown);
+  el.addEventListener('touchstart', onDown, { passive: false });
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('touchmove', onMove, { passive: false });
+  window.addEventListener('mouseup', onUp);
+  window.addEventListener('touchend', onUp);
+}
+
+// ===== Wire UI =====
+function wireUI() {
+  $('sw-rec').addEventListener('click', () => {
+    flashSwitch('sw-rec');
+    handleRec();
+  });
+  $('sw-stop').addEventListener('click', () => {
+    flashSwitch('sw-stop');
+    handleStop();
+  });
+
+  // Merger button: hold 700ms to clear
+  let holdTimer = null;
+  const merger = $('merger-btn');
+  const startHold = (e) => {
+    holdTimer = setTimeout(() => {
+      clearAll();
+      statusEl.textContent = 'MEMORY WIPED';
+    }, 700);
+  };
+  const endHold = () => { if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; } };
+  merger.addEventListener('mousedown', startHold);
+  merger.addEventListener('touchstart', startHold, { passive: true });
+  merger.addEventListener('mouseup', endHold);
+  merger.addEventListener('mouseleave', endHold);
+  merger.addEventListener('touchend', endHold);
+
+  // Knobs
+  setupKnob($('knob-loop'), (v) => {
+    loopVolume = v;
+    if (masterGain) masterGain.gain.setTargetAtTime(v, audioCtx.currentTime, 0.02);
+  });
+  setupKnob($('knob-mic'), (v) => {
+    micGainValue = v;
+    if (micMonitorGain) micMonitorGain.gain.setTargetAtTime(v * 1.2, audioCtx.currentTime, 0.02);
+  });
+
+  // Keyboard
+  window.addEventListener('keydown', (e) => {
+    if (e.repeat) return;
+    if (e.code === 'Space') { e.preventDefault(); flashSwitch('sw-rec'); handleRec(); }
+    else if (e.code === 'KeyS') { flashSwitch('sw-stop'); handleStop(); }
+    else if (e.code === 'KeyC') { clearAll(); }
+  });
+}
+
+function flashSwitch(id) {
+  const el = $(id);
+  el.classList.add('pressed');
+  setTimeout(() => el.classList.remove('pressed'), 110);
+}
+
+// ===== Boot =====
+$('start-btn').addEventListener('click', async () => {
+  const errEl = $('err');
+  errEl.textContent = '';
+  try {
+    await initAudio();
+    $('overlay').classList.add('hidden');
+    wireUI();
+    setMode('idle');
+  } catch (e) {
+    errEl.textContent = e.message + '. Check browser permissions and try again.';
+  }
+});
+</script>
+
+</body>
+</html>
